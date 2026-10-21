@@ -27,14 +27,17 @@ data class Product(
     val image: String?,
 ) {
     /** Manche Einträge stehen nur im Hinweis als milchig */
-    val dairyNote: Boolean get() = dairy.isEmpty() && Regex("(?<!nicht )milchig", RegexOption.IGNORE_CASE).containsMatchIn(notes)
-    val dairyLabels: List<String> get() = if (dairyNote) listOf("Milchig (laut Hinweis)") else dairy
+    val dairyLabels: List<String> by lazy {
+        if (dairy.isEmpty() && DAIRY_NOTE.containsMatchIn(notes)) listOf("Milchig (laut Hinweis)") else dairy
+    }
     val isDairy get() = dairyLabels.isNotEmpty()
     val nameTokens: Set<String> by lazy { Text.tokens(name) }
     val searchText: String by lazy {
         Text.norm(listOf(name, manufacturer, categories.joinToString(" "), certificates.joinToString(" ")).joinToString(" "))
     }
 }
+
+private val DAIRY_NOTE = Regex("(?<!nicht )milchig", RegexOption.IGNORE_CASE)
 
 data class ShopItem(val id: Long, val productId: Int?, val text: String, val checked: Boolean)
 
