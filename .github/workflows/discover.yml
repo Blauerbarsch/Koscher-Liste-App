@@ -1,5 +1,7 @@
 name: Datenquelle erkunden
 on: workflow_dispatch
+permissions:
+  contents: write
 jobs:
   discover:
     runs-on: ubuntu-latest
@@ -10,5 +12,15 @@ jobs:
           node-version: 22
       - run: npm i playwright@1 && npx playwright install --with-deps chromium
         working-directory: scraper
-      - run: node discover.mjs
+      - run: node discover.mjs > /tmp/discover.txt 2>&1 || true
         working-directory: scraper
+      - name: Ergebnis in Branch "debug" ablegen
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git checkout --orphan debug
+          git rm -rfq .
+          cp /tmp/discover.txt discover.txt
+          git add discover.txt
+          git commit -qm "Erkundungsergebnis"
+          git push -f origin debug
