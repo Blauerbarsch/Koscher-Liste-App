@@ -26,7 +26,10 @@ data class Product(
     val notes: String,
     val image: String?,
 ) {
-    val isDairy get() = dairy.isNotEmpty()
+    /** Manche Einträge stehen nur im Hinweis als milchig */
+    val dairyNote: Boolean get() = dairy.isEmpty() && Regex("(?<!nicht )milchig", RegexOption.IGNORE_CASE).containsMatchIn(notes)
+    val dairyLabels: List<String> get() = if (dairyNote) listOf("Milchig (laut Hinweis)") else dairy
+    val isDairy get() = dairyLabels.isNotEmpty()
     val nameTokens: Set<String> by lazy { Text.tokens(name) }
     val searchText: String by lazy {
         Text.norm(listOf(name, manufacturer, categories.joinToString(" "), certificates.joinToString(" ")).joinToString(" "))

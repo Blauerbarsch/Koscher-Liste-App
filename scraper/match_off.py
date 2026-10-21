@@ -29,8 +29,15 @@ for m, ks in keys.items():
 
 csv.field_size_limit(1 << 30)
 reader = csv.reader(sys.stdin, delimiter="\t", quoting=csv.QUOTE_NONE)
-header = next(reader)
+header = [h.strip().lstrip("\ufeff") for h in next(reader)]
+print(f"{len(header)} Spalten: {header[:80]}", flush=True)
 col = {h: i for i, h in enumerate(header)}
+for want, alts in (("brands", ("brands_tags", "brand_owner")), ("product_name", ("product_name_en", "generic_name"))):
+    if want not in col:
+        alt = next((a for a in alts if a in col), None)
+        if alt is None:
+            sys.exit(f"Spalte {want} fehlt")
+        col[want] = col[alt]
 name_cols = [col[c] for c in ("product_name", "product_name_de", "abbreviated_product_name", "generic_name") if c in col]
 i_code, i_brands = col["code"], col["brands"]
 i_img = col.get("image_small_url")

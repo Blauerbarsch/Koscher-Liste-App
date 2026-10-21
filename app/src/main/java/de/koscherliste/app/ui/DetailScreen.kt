@@ -62,8 +62,8 @@ fun DetailScreen(
                 Text("✅ Steht auf der Koscherliste der ORD", fontWeight = FontWeight.SemiBold)
                 if (p.notes.isNotBlank()) Text("Hinweis: ${p.notes}", color = MaterialTheme.colorScheme.error)
                 Field("Milchig") {
-                    if (p.dairy.isEmpty()) Text("kein Vermerk", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    else FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { p.dairy.forEach { Badge(it, DairyColor) } }
+                    if (p.dairyLabels.isEmpty()) Text("kein Vermerk", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    else FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { p.dairyLabels.forEach { Badge(it, DairyColor) } }
                 }
                 if (p.pessach.isNotEmpty()) Field("Pessach") {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { p.pessach.forEach { Badge(it, PessachColor) } }

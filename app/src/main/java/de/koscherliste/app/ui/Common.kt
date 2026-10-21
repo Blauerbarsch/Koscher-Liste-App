@@ -79,9 +79,9 @@ fun Badge(text: String, color: Color) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProductBadges(p: Product) {
-    if (p.dairy.isEmpty() && p.pessach.isEmpty()) return
+    if (p.dairyLabels.isEmpty() && p.pessach.isEmpty()) return
     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        p.dairy.forEach { Badge(it, DairyColor) }
+        p.dairyLabels.forEach { Badge(it, DairyColor) }
         p.pessach.forEach { Badge(it, PessachColor) }
     }
 }

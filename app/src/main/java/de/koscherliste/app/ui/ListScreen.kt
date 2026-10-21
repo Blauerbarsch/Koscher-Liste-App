@@ -56,7 +56,7 @@ private fun Product.values(g: FilterGroup): List<String> = when (g) {
     FilterGroup.CATEGORY -> categories
     FilterGroup.MANUFACTURER -> listOf(manufacturer)
     FilterGroup.CERT -> certificates
-    FilterGroup.DAIRY -> dairy.ifEmpty { listOf(NO_DAIRY) }
+    FilterGroup.DAIRY -> dairyLabels.ifEmpty { listOf(NO_DAIRY) }
     FilterGroup.PESSACH -> pessach
 }
 
