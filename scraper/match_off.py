@@ -42,6 +42,12 @@ name_cols = [col[c] for c in ("product_name", "product_name_de", "abbreviated_pr
 i_code, i_brands = col["code"], col["brands"]
 i_img = col.get("image_small_url")
 i_labels = col.get("labels_tags")
+i_countries = col.get("countries_tags")
+# Nur Produkte, die im deutschsprachigen Raum verkauft werden (Rezeptur und Zertifikat können je Land abweichen)
+DACH = ("en:germany", "en:austria", "en:switzerland", "en:luxembourg")
+# Einwort-Namen, die zu allgemein für eine sichere Zuordnung sind
+GENERIC = {"chocolate", "schokolade", "chocolat", "kekse", "cookies", "biscuits", "candy", "snack", "drink",
+           "juice", "saft", "tea", "tee", "coffee", "kaffee", "milk", "milch", "water", "wasser", "bier", "beer"}
 
 barcode_cands = {}  # code -> (score, ord_id)
 images = {}
@@ -57,6 +63,8 @@ for row in reader:
     manus = [m for m in manus if brand_hit(keys[m], btoks)]
     if not manus:
         continue
+    if i_countries is not None and not any(c in row[i_countries] for c in DACH):
+        continue
     code = row[i_code].strip()
     if not code.isdigit():
         continue
@@ -66,6 +74,8 @@ for row in reader:
         for p in by_manu[m]:
             ot = tokens(p["name"])
             pt = ot - btoks or ot
+            if len(pt) == 1 and next(iter(pt)) in GENERIC:
+                continue
             for n in names:
                 nt = tokens(n)
                 rt = (nt - btoks) if (ot - btoks) else (nt | btoks)
