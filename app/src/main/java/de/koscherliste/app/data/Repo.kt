@@ -31,10 +31,44 @@ data class Product(
         if (dairy.isEmpty() && DAIRY_NOTE.containsMatchIn(notes)) listOf("Milchig (laut Hinweis)") else dairy
     }
     val isDairy get() = dairyLabels.isNotEmpty()
+    /** Symbol passend zur Kategorie, falls kein Produktfoto da ist */
+    val emoji: String by lazy { emojiFor(categories.joinToString(" ")) ?: emojiFor(name) ?: "🛒" }
+    val sortKey: String by lazy { name.trimStart { !it.isLetterOrDigit() }.lowercase() }
     val nameTokens: Set<String> by lazy { Text.tokens(name) }
     val searchText: String by lazy {
         Text.norm(listOf(name, manufacturer, categories.joinToString(" "), certificates.joinToString(" ")).joinToString(" "))
     }
+}
+
+private val EMOJI = listOf(
+    "hamburgerbrot" to "🍔", "aufstrich" to "🧈", "dekorieren" to "🎂", "glasur" to "🎂", "paniermehl" to "🌾",
+    "gelfix" to "🍓", "einmach" to "🍓", "kuechlein" to "🧁", "zwiebel" to "🧅",
+    "pizza" to "🍕", "falafel" to "🧆", "eis" to "🍦", "honig" to "🍯", "kaffee" to "☕", "tee" to "🍵",
+    "vodka" to "🥃", "spirituosen" to "🥃", "bier" to "🍺", "wein" to "🍷", "lemberger" to "🍷",
+    "schoko" to "🍫", "kuvertuere" to "🍫", "kakao" to "🍫",
+    "keks" to "🍪", "gebaeck" to "🍪", "waffel" to "🍪", "cracker" to "🍪", "knaecke" to "🍪",
+    "bonbon" to "🍬", "suesswaren" to "🍬", "riegel" to "🍬", "marzipan" to "🍬", "fondant" to "🍬",
+    "zucker" to "🍬", "suessmittel" to "🍬", "sirup" to "🍬", "melasse" to "🍬",
+    "kuchen" to "🍰", "tarte" to "🍰", "torte" to "🍰", "dessert" to "🍮", "pudding" to "🍮", "gruetze" to "🍮",
+    "brot" to "🍞", "baguette" to "🥖", "bagel" to "🥯", "croissant" to "🥐", "backwaren" to "🍞",
+    "nudel" to "🍝", "spaghetti" to "🍝", "reis" to "🍚", "bulgur" to "🍚", "linsen" to "🍚",
+    "cornflakes" to "🥣", "cerealien" to "🥣", "muesli" to "🥣",
+    "milch" to "🥛", "fisch" to "🐟", "nuss" to "🥜", "nuesse" to "🥜", "mandel" to "🥜", "pistazie" to "🥜", "erdnuss" to "🥜",
+    "marmelade" to "🍓", "fruechte" to "🍓", "kompott" to "🍓", "eingemachtes" to "🍓", "mark" to "🍎",
+    "kartoffel" to "🥔", "kloess" to "🥔", "knoedel" to "🥔", "kloss" to "🥔", "puffer" to "🥔",
+    "oel" to "🫒", "margarine" to "🧈", "gewuerz" to "🧂", "salz" to "🧂", "pfeffer" to "🧂",
+    "sauce" to "🥫", "dressing" to "🥫", "senf" to "🥫", "mayo" to "🥫", "pesto" to "🥫", "tomaten" to "🥫",
+    "meerrettich" to "🥫", "konserve" to "🥫", "suppe" to "🍲", "essig" to "🥫",
+    "soja" to "🌱", "wurst" to "🌱", "vegan" to "🌱", "kinder" to "🍼",
+    "arznei" to "💊", "nahrungserg" to "💊",
+    "mehl" to "🌾", "back" to "🌾", "hefe" to "🌾", "teig" to "🌾", "staerke" to "🌾", "natron" to "🌾", "griess" to "🌾",
+    "getraenk" to "🧃", "saft" to "🧃", "aroma" to "🧪", "vanille" to "🌼", "zitronensaeure" to "🍋",
+)
+
+/** Kurze Schlüssel müssen am Wortanfang stehen (sonst wäre „Reis“ ein Eis), lange dürfen im Wort stecken */
+fun emojiFor(text: String): String? {
+    val words = Text.norm(text).split(' ').filter { it.isNotEmpty() }
+    return EMOJI.firstOrNull { (k, _) -> words.any { w -> if (k.length >= 5) k in w else w.startsWith(k) } }?.second
 }
 
 private val DAIRY_NOTE = Regex("(?<!nicht )milchig", RegexOption.IGNORE_CASE)
@@ -94,7 +128,7 @@ object Repo {
             val o = arr.getJSONObject(i)
             list += Product(
                 id = o.optInt("id", -i - 1),
-                name = o.optString("name").trim(),
+                name = o.optString("name").trim().trimStart('-', '–', '—', ' '),
                 manufacturer = o.optString("manufacturer").trim(),
                 categories = o.optJSONArray("categories").strings(),
                 certificates = o.optJSONArray("certificates").strings(),
@@ -104,7 +138,7 @@ object Repo {
                 image = o.optString("image").takeIf { it.startsWith("http") },
             )
         }
-        list.sortWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+        list.sortBy { it.sortKey }
         byId = list.associateBy { it.id }
         products = list
 

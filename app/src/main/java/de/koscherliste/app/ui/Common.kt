@@ -38,7 +38,7 @@ val DairyColor = Color(0xFF3D7BD9)
 val PessachColor = Color(0xFFB7791F)
 
 @Composable
-fun ProductImage(url: String?, name: String, size: Dp) {
+fun ProductImage(url: String?, name: String, size: Dp, emoji: String? = null) {
     val shape = RoundedCornerShape(10.dp)
     val fallback: @Composable () -> Unit = {
         Box(
@@ -46,7 +46,7 @@ fun ProductImage(url: String?, name: String, size: Dp) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                name.trim().take(1).uppercase(),
+                emoji ?: name.trim().take(1).uppercase(),
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 fontWeight = FontWeight.Bold,
                 fontSize = (size.value * 0.4f).sp,
@@ -92,7 +92,7 @@ fun ProductRow(p: Product, onClick: () -> Unit, showCart: Boolean = true) {
         Modifier.clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ProductImage(p.image, p.name, 48.dp)
+        ProductImage(p.image, p.name, 48.dp, p.emoji)
         Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(p.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(

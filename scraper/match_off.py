@@ -49,8 +49,8 @@ DACH = ("en:germany", "en:austria", "en:switzerland", "en:luxembourg")
 GENERIC = {"chocolate", "schokolade", "chocolat", "kekse", "cookies", "biscuits", "candy", "snack", "drink",
            "juice", "saft", "tea", "tee", "coffee", "kaffee", "milk", "milch", "water", "wasser", "bier", "beer"}
 
-barcode_cands = {}  # code -> (score, ord_id)
-images = {}
+barcode_cands = {}  # code -> ord_id
+images = {}  # ord_id -> (Güte, url)  – Bilder dürfen lockerer passen als Barcodes
 rows = hits = 0
 for row in reader:
     rows += 1
@@ -63,23 +63,30 @@ for row in reader:
     manus = [m for m in manus if brand_hit(keys[m], btoks)]
     if not manus:
         continue
-    if i_countries is not None and not any(c in row[i_countries] for c in DACH):
+    dach = i_countries is None or any(c in row[i_countries] for c in DACH)
+    img = row[i_img].strip() if i_img is not None else ""
+    if not dach and not img:
         continue
     code = row[i_code].strip()
-    if not code.isdigit():
-        continue
     names = [row[i] for i in name_cols if row[i].strip()]
     best = None
     for m in manus:
         for p in by_manu[m]:
             ot = tokens(p["name"])
             pt = ot - btoks or ot
-            if len(pt) == 1 and next(iter(pt)) in GENERIC:
+            if not pt or (len(pt) == 1 and next(iter(pt)) in GENERIC):
                 continue
             for n in names:
                 nt = tokens(n)
                 rt = (nt - btoks) if (ot - btoks) else (nt | btoks)
-                if strict_match(pt, rt):
+                strict = strict_match(pt, rt)
+                if img:
+                    cov = len(pt & rt) / len(pt)
+                    if cov == 1 or (len(pt) >= 3 and cov >= 0.75):
+                        q = (strict, cov, dach, -len(rt - pt))
+                        if p["id"] not in images or q > images[p["id"]][0]:
+                            images[p["id"]] = (q, img)
+                if strict and dach and code.isdigit():
                     score = len(pt)
                     if best is None or score > best[0]:
                         best = (score, p["id"], False)
@@ -89,14 +96,12 @@ for row in reader:
     if best and not best[2]:
         hits += 1
         barcode_cands[code] = best[1]
-        if i_img is not None and row[i_img] and best[1] not in images:
-            images[best[1]] = row[i_img]
     if rows % 500000 == 0:
-        print(f"{rows} OFF-Zeilen, {hits} Treffer", flush=True)
+        print(f"{rows} OFF-Zeilen, {hits} Treffer, {len(images)} Bilder", flush=True)
 
 for p in products:
     if p["id"] in images:
-        p["image"] = images[p["id"]]
+        p["image"] = images[p["id"]][1]
 (OUT / "products.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
 (OUT / "barcodes.json").write_text(json.dumps(barcode_cands, separators=(",", ":")))
 (OUT / "brands.json").write_text(json.dumps(keys, ensure_ascii=False, separators=(",", ":")))

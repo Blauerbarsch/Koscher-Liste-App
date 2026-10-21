@@ -77,7 +77,7 @@ private fun ShopRow(item: ShopItem, onOpen: (Product) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = item.checked, onCheckedChange = { Repo.setChecked(item, it) })
-        if (p != null) ProductImage(p.image, p.name, 40.dp)
+        if (p != null) ProductImage(p.image, p.name, 40.dp, p.emoji)
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
             Text(
                 p?.name ?: item.text,
