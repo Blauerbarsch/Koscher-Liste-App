@@ -23,8 +23,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Koscherliste aus Branch "data" holen
         run: |
-          git fetch --depth 1 origin data
-          for f in products.json barcodes.json brands.json; do git show FETCH_HEAD:$f > app/src/main/assets/$f; done
+          if git fetch --depth 1 origin data; then
+            for f in products.json barcodes.json brands.json; do git show FETCH_HEAD:$f > app/src/main/assets/$f; done
+            echo "HAVE_DATA=1" >> $GITHUB_ENV
+          else
+            echo "Noch keine Daten – Testbau mit Beispieldaten, ohne Veröffentlichung"
+            echo '{"fetched":"Test","products":[{"id":1,"name":"Choco Leibniz Milk","manufacturer":"Bahlsen","categories":["Kekse"],"certificates":["Triangel K"],"dairy":["Milchig"],"pessach":[],"notes":""}]}' > app/src/main/assets/products.json
+            echo '{}' > app/src/main/assets/barcodes.json
+            echo '{"Bahlsen":[["bahlsen"]]}' > app/src/main/assets/brands.json
+          fi
           ls -la app/src/main/assets
       - uses: actions/setup-java@v4
         with:
@@ -36,6 +43,7 @@ jobs:
       - name: APK bauen
         run: gradle :app:assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
       - name: Veröffentlichen
+        if: env.HAVE_DATA == '1'
         run: |
           cp app/build/outputs/apk/release/app-release.apk Koscher-Liste.apk
           STAND=$(python3 -c "import json;print(json.load(open('app/src/main/assets/products.json'))['fetched'])")
