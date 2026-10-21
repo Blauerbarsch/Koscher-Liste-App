@@ -1,0 +1,56 @@
+name: Koscherliste aktualisieren
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"   # jeden Montag früh
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: data
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Werkzeuge installieren
+        run: |
+          pip install playwright beautifulsoup4
+          python -m playwright install --with-deps chromium
+      - name: ORD-Liste laden
+        run: mkdir -p out && python scraper/scrape_ord.py out 2>&1 | tee out/scrape.log
+      - name: Mit Open Food Facts abgleichen
+        run: |
+          curl -sSfL --retry 3 https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz \
+            | gzip -dc | python scraper/match_off.py out 2>&1 | tee out/match.log
+      - name: In Branch "data" ablegen
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git fetch origin data || true
+          git checkout --orphan data-new
+          git rm -rfq .
+          cp out/products.json out/barcodes.json out/brands.json .
+          cp out/*.log out/debug_* . 2>/dev/null || true
+          git add -A
+          git commit -qm "Koscherliste $(date +%F)"
+          git push -f origin data-new:data
+      - name: App neu bauen
+        if: success()
+        continue-on-error: true
+        run: gh workflow run build.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Fehlerprotokoll ablegen
+        if: failure()
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git checkout --orphan debug-data
+          git rm -rfq . || true
+          cp out/*.log out/debug_* . 2>/dev/null || true
+          git add -A && git commit -qm "Fehlerprotokoll" && git push -f origin debug-data:debug
