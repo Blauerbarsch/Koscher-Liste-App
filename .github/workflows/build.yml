@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Koscherliste aus Branch "data" holen
         run: |
+          mkdir -p app/src/main/assets
           if git fetch --depth 1 origin data; then
             for f in products.json barcodes.json brands.json; do git show FETCH_HEAD:$f > app/src/main/assets/$f; done
             echo "HAVE_DATA=1" >> $GITHUB_ENV
