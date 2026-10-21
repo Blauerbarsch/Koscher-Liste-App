@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Einkaufskorb mit Haken -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M33,46h42l-5,24c-0.5,2.4 -2.6,4 -5,4H43c-2.4,0 -4.5,-1.6 -5,-4z" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M42,46l8,-14M66,46l-8,-14" />
+    <path android:strokeColor="#FF1F4E8C" android:strokeWidth="5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:fillColor="#00000000"
+        android:pathData="M45,59l7,6l12,-12" />
+</vector>

@@ -1,0 +1,7 @@
+out/
+.gradle/
+build/
+app/build/
+local.properties
+__pycache__/
+app/src/main/assets/*.json

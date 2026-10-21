@@ -8,6 +8,9 @@ permissions:
   actions: write
 concurrency:
   group: data
+defaults:
+  run:
+    shell: bash
 jobs:
   data:
     runs-on: ubuntu-latest
@@ -36,7 +39,7 @@ jobs:
           git rm -rfq .
           cp out/products.json out/barcodes.json out/brands.json .
           cp out/*.log out/debug_* . 2>/dev/null || true
-          git add -A
+          git add products.json barcodes.json brands.json *.log debug_* 2>/dev/null || git add products.json barcodes.json brands.json
           git commit -qm "Koscherliste $(date +%F)"
           git push -f origin data-new:data
       - name: App neu bauen

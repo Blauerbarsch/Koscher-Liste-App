@@ -126,7 +126,7 @@ def main():
         params = parse_qsl(captured["body"], keep_blank_values=True)
         keys = [k for k, _ in params]
         (OUT / "debug_request_keys.txt").write_text("\n".join(keys))
-        page_key = "page" if "page" in keys else None
+        page_key = next((k for k in ("page_settings[page]", "page") if k in keys), None)
         if not page_key:
             sys.exit("Kein 'page'-Parameter in der Anfrage: " + ", ".join(keys[-20:]))
 
