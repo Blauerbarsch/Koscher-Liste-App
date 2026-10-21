@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/runner/work/Koscher-Liste-App/Koscher-Liste-App/scraper/match_off.py", line 35, in <module>
+    i_code, i_brands = col["code"], col["brands"]
+                                    ~~~^^^^^^^^^^
+KeyError: 'brands'
